@@ -1,0 +1,92 @@
+/*{
+  "type": "action",
+  "targets": ["omnifocus"],
+  "author": "Bastian Kuhn",
+  "identifier": "de.bastian-kuhn.omnifocus.sync.jira",
+  "version": "1.0",
+  "description": "Sync elements from Jira with Omnifocus",
+  "label": "x Jira: Sync",
+  "shortLabel": "Jira: sync"
+}*/
+var _ = function(){
+    var action = new PlugIn.Action(function(selection, sender){
+        console.clear()
+
+        // START EDIT
+        var user = "USERNAME"
+        var password = "PASSWORD"
+        var jira_url = "https://jira.server.de"
+        var used_tag = "Jira"
+        // END EDIT
+
+        var tag = flattenedTags.byName(used_tag) || new Tag(used_tag)
+        var tasks = tag.tasks
+
+        var url_params = "/rest/api/2/search?jql=assignee=currentuser()%20and%20resolution%20is%20empty"
+        var url = jira_url + url_params
+
+        var data = Data.fromString(user + ":" + password)
+        var credentials = data.toBase64()
+
+        var request = URL.FetchRequest.fromString(url)
+
+        request.method = 'GET'
+        request.headers = {"Authorization": "Basic" + " " + credentials}
+        var requestPromise =  request.fetch()
+
+        requestPromise.then(response => {
+            if(response.mimeType == "application/json"){
+                var json_response = JSON.parse(response.bodyString)
+                // ADD THE TASKS
+                json_response.issues.forEach(ticket => {
+                    // Search if we need to add a new Task
+                    var hit = false
+                    tasks.forEach(task => {
+                        if(task.name.startsWith(ticket.key)) {
+                            // We have a matching Tasks
+                            hit = true
+                            // Make sure the task opens again
+                            task.markIncomplete()
+                        }
+                    })
+                    // There was no Matching Task, so we create the Task
+                    if(!hit) {
+                        var task_name = ticket.key + " " + ticket.fields.summary
+                        var task = new Task(task_name, inbox.beginning)
+                        task.note = ticket.self + "\n" + ticket.fields.description
+                        task.addTag(tag)
+                    }
+                })
+                //Close Tasks
+                tasks.forEach(task => {
+                    // Search the Tasks we have in Jira
+                    var no_hit = true
+                    json_response.issues.forEach(ticket => {
+                        if(task.name.startsWith(ticket.key)) {
+                            // We have a matching Tasks
+                            // So we don't close them
+                            no_hit = false
+                        }
+                    })
+                    if (no_hit) {
+                        task.markComplete()
+                    }
+                })
+            }
+        })
+
+        requestPromise.catch(err => {
+            console.log(`DEBUG: catch error ${err}`)
+        })
+    });
+
+  action.validate = function(selection, sender){
+    //
+    // This action is always valid.
+    //
+    return true
+  };
+
+  return action;
+}();
+_;
