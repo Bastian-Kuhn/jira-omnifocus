@@ -8,7 +8,7 @@
   "label": "x Jira: Sync",
   "shortLabel": "Jira: sync"
 }*/
-var _ = function(){
+(() => {
     var action = new PlugIn.Action(function(selection, sender){
         console.clear()
 
@@ -88,5 +88,4 @@ var _ = function(){
   };
 
   return action;
-}();
-_;
+})();
