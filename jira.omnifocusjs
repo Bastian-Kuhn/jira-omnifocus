@@ -13,30 +13,30 @@
     console.clear();
 
     // START EDIT
-    var user = "username or email";
-    var password = "password or token";
-    var jiraUrl = "https://example.atlassian.net";
-    var jiraProjectId = "PROJ";
-    var omnifocusTagToUse = "Jira";
+    const user = "username"; // use email address for jira cloud
+    const password = "password"; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
+    const jiraUrl = "https://example.atlassian.net";
+    const jiraProjectId = "PROJ";
+    const omnifocusTagToUse = "Jira";
+    const jiraQuery = "assignee=currentuser() and resolution is empty";
     // END EDIT
 
-    var tag =
+    const tag =
       tags.byName(omnifocusTagToUse) ||
       flattenedTags.byName(omnifocusTagToUse) ||
       new Tag(omnifocusTagToUse);
-    var tasks = tag.tasks;
+    const tasks = tag.tasks;
 
-    var url_params =
-      "/rest/api/2/search?jql=assignee=currentuser()%20and%20resolution%20is%20empty";
-    var url = jiraUrl + url_params;
+    const urlParams = "/rest/api/2/search?jql=" + encodeURIComponent(jiraQuery);
+    const url = jiraUrl + urlParams;
 
-    var data = Data.fromString(user + ":" + password);
-    var credentials = data.toBase64();
+    const data = Data.fromString(user + ":" + password);
+    const credentials = data.toBase64();
 
-    var request = URL.FetchRequest.fromString(url);
+    const request = URL.FetchRequest.fromString(url);
     request.method = "GET";
     request.headers = { Authorization: `Basic ${credentials}` };
-    var requestPromise = request.fetch();
+    const requestPromise = request.fetch();
 
     // cache object instead of array so search will be faster later
     let omnifocusTasks = {};
@@ -56,10 +56,10 @@
 
     requestPromise.then((response) => {
       if (response.mimeType == "application/json") {
-        var json_response = JSON.parse(response.bodyString);
+        var jsonResponse = JSON.parse(response.bodyString);
         // ADD THE TASKS
 
-        for (const issue of json_response.issues) {
+        for (const issue of jsonResponse.issues) {
           // Search if we need to add a new Task
           if (omnifocusTasks[issue.key]) {
             // Make sure the task opens again
