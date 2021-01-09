@@ -15,7 +15,7 @@
     const password = "password"; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
     const jiraUrl = "https://example.atlassian.net";
     const jiraProjectId = "PROJ";
-    const omnifocusTagToUse = "Jira";
+    const omnifocusTagToUse = "Jira"; // you can also use the format "Parent1 : Parent2 : Child"
     const jiraQuery = "assignee=currentuser() and resolution is empty";
     // END EDIT
 
@@ -30,10 +30,47 @@
     request.headers = { Authorization: `Basic ${credentials}` };
     const requestPromise = request.fetch();
 
-    const tag =
-      tags.byName(omnifocusTagToUse) ||
-      flattenedTags.byName(omnifocusTagToUse) ||
-      new Tag(omnifocusTagToUse);
+    // Find the tag
+    let tag = null;
+
+    // If user gave an absolute path, parse it and process it
+    const parsedOmnifocusTagToUse = omnifocusTagToUse.split(" : ");
+    if (parsedOmnifocusTagToUse.length > 1) {
+      let currentTag = null;
+      let i;
+      for (i = 0; i < parsedOmnifocusTagToUse.length; i++) {
+        let newTag;
+        if (currentTag) {
+          newTag = currentTag.childNamed(parsedOmnifocusTagToUse[i]);
+        } else {
+          newTag = tags.byName(parsedOmnifocusTagToUse[i]);
+        }
+        if (!newTag) break;
+        currentTag = newTag;
+      }
+
+      // after all ran, check if its a success, then apply tag
+      if (
+        currentTag &&
+        i === parsedOmnifocusTagToUse.length &&
+        currentTag.name ===
+          parsedOmnifocusTagToUse[parsedOmnifocusTagToUse.length - 1]
+      ) {
+        tag = currentTag;
+      }
+    }
+
+    if (!tag) {
+      // if tag is not found yet
+      tag =
+        tags.byName(omnifocusTagToUse) ||
+        flattenedTags.byName(omnifocusTagToUse) ||
+        new Tag(omnifocusTagToUse);
+    }
+    if (!tag) {
+      console.error(new Error("could not create tag"));
+      return;
+    }
     const tasks = tag.tasks;
 
     // cache object instead of array so search will be faster later
