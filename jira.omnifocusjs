@@ -9,7 +9,7 @@
   "shortLabel": "Jira: sync"
 }*/
 (() => {
-  var action = new PlugIn.Action(function (selection, sender) {
+  const action = new PlugIn.Action(function (selection, sender) {
     console.clear();
 
     // START EDIT
@@ -56,7 +56,7 @@
 
     requestPromise.then((response) => {
       if (response.mimeType == "application/json") {
-        var jsonResponse = JSON.parse(response.bodyString);
+        const jsonResponse = JSON.parse(response.bodyString);
         // ADD THE TASKS
 
         for (const issue of jsonResponse.issues) {
