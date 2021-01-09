@@ -42,7 +42,7 @@
     let omnifocusTasks = {};
     tasks.forEach((task) => {
       if (task.name.startsWith(jiraProjectId)) {
-        const re = new RegExp(`${jiraProjectId}-[^ ]+`);
+        const re = new RegExp(`^${jiraProjectId}-[^ ]+`);
         let taskId;
         try {
           taskId = task.name.match(re)[0];
