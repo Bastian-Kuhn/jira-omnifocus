@@ -5,7 +5,7 @@
   "identifier": "de.bastian-kuhn.omnifocus.sync.jira",
   "version": "1.0",
   "description": "Sync elements from Jira with Omnifocus",
-  "label": "🔄 Jira: Sync",
+  "label": "🔹 Jira: Sync",
   "shortLabel": "Jira: sync"
 }*/
 (() => {
