@@ -14,9 +14,10 @@
     const user = "username"; // use email address for jira cloud
     const password = "password"; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
     const jiraUrl = "https://example.atlassian.net";
-    const jiraProjectId = "PROJ";
+    const jiraProjectId = ".*";
     const omnifocusTagToUse = "Jira"; // you can also use the format "Parent1 : Parent2 : Child"
-    const jiraQuery = "assignee=currentuser() and resolution is empty";
+    const jiraQuery = "assignee=currentuser() and resolution is empty"; // Use query below to filter Backlog out
+    //const jiraQuery = "assignee=currentuser() and resolution is empty and status != Backlog";
     // END EDIT
 
     const urlParams = "/rest/api/2/search?jql=" + encodeURIComponent(jiraQuery);
@@ -104,9 +105,11 @@
           // There was no Matching Task, so we create the Task
           const taskName = issue.key + " " + issue.fields.summary;
           const newTask = new Task(taskName, inbox.beginning);
-          newTask.note =
-            issue.self + "\n" + (issue.fields.description || "No description");
+          const taskUrl = jiraUrl + "/browse/" + issue.key;
+
           newTask.addTag(tag);
+          newTask.note =
+            taskUrl + "\n" + (issue.fields.description || "No description");
         }
 
         //Close Tasks
