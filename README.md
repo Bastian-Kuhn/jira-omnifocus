@@ -9,11 +9,9 @@ But you can edit everything else behind this Number. Also, the Note, which is as
 ## What the plugin does:
  * It queries all Ticket which are Assigned to you and Open from Jira
  * Queries all Tasks with the given Tag (default Jira) from OmniFocus
+ * You can set even a Filter, or just wildcard with .*
  * Create new Tasks, or reopen Tasks if they appear in Jira
  * Closes all Tasks with the given Tag which not appear in Jira
 
 ## Multiple Instances
 You can run Multiple Instances of this script, by copying it to a new name, update the label, identifier and in any case the used_tag variable.
-
-## Footnote
-I'm a Python Programmer and to be bold, not a fan of JavaScript. This Script works of course (don't worry) is smal and clean, but not perfect. I currently need 4 loops to check all the status. This can make of course the Script a bit slower. While I know easy ways in Python to optimize that, a JavaScript Developer would be welcome to optimize this in this JavaScript Plugin.
