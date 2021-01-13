@@ -11,13 +11,13 @@
 (() => {
   const action = new PlugIn.Action(function (selection, sender) {
     // START EDIT
-    const user = "username"; // use email address for jira cloud
-    const password = "password"; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
+    const user = "User"; // use email address for jira cloud
+    const password = "Password"; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
     const jiraUrl = "https://example.atlassian.net";
-    const jiraProjectId = ".*";
+    const jiraProjectId = "[A-Za-z0-9-]+";
     const omnifocusTagToUse = "Jira"; // you can also use the format "Parent1 : Parent2 : Child"
-    const jiraQuery = "assignee=currentuser() and resolution is empty"; // Use query below to filter Backlog out
-    //const jiraQuery = "assignee=currentuser() and resolution is empty and status != Backlog";
+    const jiraQuery = "assignee=currentuser() and resolution is empty";
+    const processComments = true; // if true, a subtask is added for each ticket comment
     // END EDIT
 
     const urlParams = "/rest/api/2/search?jql=" + encodeURIComponent(jiraQuery);
@@ -86,6 +86,8 @@
         return;
       }
       omnifocusTasks[taskId] = task;
+      // Reset Jira Match Flag
+      omnifocusTasks[taskId].jiraToOmnifocusMatched = false;
     });
 
     requestPromise.then((response) => {
@@ -114,7 +116,9 @@
 
         //Close Tasks
         Object.values(omnifocusTasks).forEach((task) => {
-          if (!task.jiraToOmnifocusMatched) task.markComplete();
+          if (!task.jiraToOmnifocusMatched) {
+              task.markComplete();
+            }
         });
       }
     });
