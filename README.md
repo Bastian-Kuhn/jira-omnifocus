@@ -13,6 +13,10 @@ But you can edit everything else behind this Number. Also, the Note, which is as
  * Create new Tasks, or reopen Tasks if they appear in Jira
  * Closes all Tasks with the given Tag which not appear in Jira
 
+## New Features
+### Version 1.1
+ * Added Function to add Jira Comments as subtask to the task
+
 ## Multiple Instances
 You can run Multiple Instances of this script, by copying it to a new name, update the label, identifier and in any case the used_tag variable.
 

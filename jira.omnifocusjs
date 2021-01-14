@@ -3,7 +3,7 @@
   "targets": ["omnifocus"],
   "author": "Bastian Kuhn",
   "identifier": "de.bastian-kuhn.omnifocus.sync.jira",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Sync elements from Jira with Omnifocus",
   "label": "🔹 Jira: Sync",
   "shortLabel": "Jira: sync"
@@ -11,17 +11,18 @@
 (() => {
   const action = new PlugIn.Action(function (selection, sender) {
     // START EDIT
-    const user = "User"; // use email address for jira cloud
-    const password = "Password"; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
-    const jiraUrl = "https://example.atlassian.net";
-    const jiraProjectId = "[A-Za-z0-9-]+";
+    const user = ""; // use email address for jira cloud
+    const password = ""; // you can use api tokens, see https://id.atlassian.com/manage-profile/security/api-tokens
+    const jiraUrl = "https://jira...de";
     const omnifocusTagToUse = "Jira"; // you can also use the format "Parent1 : Parent2 : Child"
     const jiraQuery = "assignee=currentuser() and resolution is empty";
-    const processComments = true; // if true, a subtask is added for each ticket comment
+    const processComments = false; // if true, a subtask is added for each ticket comment
+    const omnifocusCommentTagToUse = "Jira-Comment";
     // END EDIT
 
     const urlParams = "/rest/api/2/search?jql=" + encodeURIComponent(jiraQuery);
     const url = jiraUrl + urlParams;
+
 
     const data = Data.fromString(user + ":" + password);
     const credentials = data.toBase64();
@@ -60,7 +61,6 @@
         tag = currentTag;
       }
     }
-
     if (!tag) {
       // if tag is not found yet
       tag =
@@ -74,10 +74,32 @@
     }
     const tasks = tag.tasks;
 
+    const omnifocusComments = {};
+    if (processComments) {
+      // Get all comment tagged tasks
+      commentTag =
+        tags.byName(omnifocusCommentTagToUse) ||
+        flattenedTags.byName(omnifocusCommentTagToUse) ||
+        new Tag(omnifocusCommentTagToUse);
+
+        const commentTasks = commentTag.tasks;
+        commentTasks.forEach((comment) => {
+          const re = new RegExp(`^[A-Za-z0-9-]+ [0-9]+`);
+          let commentId;
+          try {
+            commentId = comment.name.match(re);
+            if (!commentId) return;
+          } catch {
+            return;
+          }
+          omnifocusComments[commentId] = comment;
+        });
+    }
+
     // cache object instead of array so search will be faster later
     let omnifocusTasks = {};
     tasks.forEach((task) => {
-      const re = new RegExp(`^${jiraProjectId}-[^ ]+`);
+      const re = new RegExp(`^[A-Za-z0-9-]+`);
       let taskId;
       try {
         taskId = task.name.match(re)[0];
@@ -114,12 +136,31 @@
             taskUrl + "\n" + (issue.fields.description || "No description");
         }
 
-        //Close Tasks
-        Object.values(omnifocusTasks).forEach((task) => {
+
+        //Close Tasks or Update comments if enabled
+        for (const [task_id, task] of Object.entries(omnifocusTasks)) {
           if (!task.jiraToOmnifocusMatched) {
               task.markComplete();
+            } else if (processComments) {
+                const commentUrlParams = "/rest/api/2/issue/"+task_id +"/comment"
+                const commentUrl = jiraUrl + commentUrlParams;
+                commentRequest = URL.FetchRequest.fromString(commentUrl);
+                commentRequest.method = "GET";
+                commentRequest.headers = { Authorization: `Basic ${credentials}` };
+                var requestPromiseComment = commentRequest.fetch();
+                requestPromiseComment.then((commentResponse) => {
+                    const jsonComments = JSON.parse(commentResponse.bodyString);
+                    for (const comment of jsonComments.comments) {
+                        const comment_id = task_id + " " + comment.id;
+                        if (!omnifocusComments[comment_id] ) {
+                            const taskName = comment_id + " Comment:\n" + comment.body;
+                            const newTask = new Task(taskName, task);
+                            newTask.addTag(commentTag);
+                        }
+                    }
+                });
             }
-        });
+        };
       }
     });
 
