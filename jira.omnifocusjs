@@ -141,7 +141,10 @@
         for (const [task_id, task] of Object.entries(omnifocusTasks)) {
           if (!task.jiraToOmnifocusMatched) {
               task.markComplete();
-            } else if (processComments) {
+            }
+            // Better check anyway, may the ticket is just reasigned
+            // @TODO next sync will close it anyway
+            if (processComments) {
                 const commentUrlParams = "/rest/api/2/issue/"+task_id +"/comment"
                 const commentUrl = jiraUrl + commentUrlParams;
                 commentRequest = URL.FetchRequest.fromString(commentUrl);
