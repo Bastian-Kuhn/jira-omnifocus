@@ -17,8 +17,11 @@ But you can edit everything else behind this Number. Also, the Note, which is as
 ### Version 1.1
  * Added Function to add Jira Comments as subtask to the task
 
+### Version 1.2
+ * Added support to query multipe JIRA Instances
+
 ## Multiple Instances
-You can run Multiple Instances of this script, by copying it to a new name, update the label, identifier and in any case the used_tag variable.
+You can run configure Multiple Jira Instances inside the Script
 
 
 # Thanks to:
