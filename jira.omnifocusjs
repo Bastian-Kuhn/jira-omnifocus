@@ -135,12 +135,16 @@
         });
 
         requestPromise.then((response) => {
+          let createdTasks = 0;
+          let checkedTickets = 0;
+          let createdComments = 0;
           if (response.mimeType == "application/json") {
             const jsonResponse = JSON.parse(response.bodyString);
             // ADD THE TASKS
 
             for (const issue of jsonResponse.issues) {
               // Search if we need to add a new Task
+              checkedTickets++;
               if (omnifocusTasks[issue.key]) {
                 // Make sure the task opens again
                 omnifocusTasks[issue.key].markIncomplete();
@@ -152,6 +156,7 @@
               const taskName = issue.key + " " + issue.fields.summary;
               const newTask = new Task(taskName, inbox.beginning);
               const taskUrl = jiraUrl + "/browse/" + issue.key;
+              createdTasks++;
 
               newTask.addTag(tag);
               newTask.note =
@@ -181,12 +186,14 @@
                                 const taskName = comment_id + " Comment:\n" + comment.body;
                                 const newTask = new Task(taskName, task);
                                 newTask.addTag(commentTag);
+                                createdComments++;
                             }
                         }
                     });
                 }
             };
           }
+          console.log(`NOTICE: Synced ${jiraUrl}. Checked ${checkedTickets} Tickets, Created ${createdTasks} new tasks, Added ${createdComments} Subtickets for Comments`);
         });
 
         requestPromise.catch((err) => {
