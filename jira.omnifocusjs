@@ -3,7 +3,7 @@
   "targets": ["omnifocus"],
   "author": "Bastian Kuhn",
   "identifier": "de.bastian-kuhn.omnifocus.sync.jira",
-  "version": "1.2",
+  "version": "1.3",
   "description": "Sync elements from Jira with Omnifocus",
   "label": "🔹 Jira: Sync",
   "shortLabel": "Jira: sync"
@@ -167,10 +167,20 @@
             //Close Tasks or Update comments if enabled
             for (const [task_id, task] of Object.entries(omnifocusTasks)) {
               if (!task.jiraToOmnifocusMatched) {
-                  task.markComplete();
+                  var can_delete = true;
+
+                  if(task.hasChildren){
+                      task.children.forEach(subtask => {
+                          if (!subtask.completed){
+                            can_delete = false;
+                          }
+                      });
+                  }
+                  if(can_delete) {
+                    task.markComplete();
+                  }
                 }
                 // Better check anyway, may the ticket is just reasigned
-                // @TODO next sync will close it anyway
                 if (processComments) {
                     const commentUrlParams = "/rest/api/2/issue/"+task_id +"/comment"
                     const commentUrl = jiraUrl + commentUrlParams;
